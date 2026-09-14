@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Permissions-Policy" content="camera=(self)">
+  <title>小食伴 · 和小猫一起吃饭</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 欢迎屏 -->
+    <div id="welcome-screen" class="screen welcome-screen">
+      <div class="welcome-bg" aria-hidden="true"></div>
+      <div class="welcome-deco welcome-deco--circle" aria-hidden="true"></div>
+      <div class="welcome-deco welcome-deco--square" aria-hidden="true"></div>
+      <div class="welcome-card memphis-card">
+        <div class="frame-wrap welcome-frame-wrap">
+          <div class="media-frame welcome-cat-frame">
+            <video
+              src="assets/cat_new action2/等待-眨眼.mp4?v=4"
+              class="welcome-cat"
+              autoplay
+              loop
+              muted
+              playsinline
+            ></video>
+          </div>
+        </div>
+        <h1 class="welcome-title">小食伴</h1>
+        <p class="tagline">你吃一口，小猫也吃一口</p>
+        <p class="hint">把平板/电脑放在餐桌旁，让孩子和小猫一起开动吧</p>
+        <label class="welcome-duration memphis-setting">
+          <span class="memphis-setting__label">进餐倒计时</span>
+          <span id="meal-duration-label-welcome" class="memphis-setting__value">30 分钟</span>
+          <input type="range" id="meal-duration-welcome" min="0" max="60" value="30">
+          <span class="memphis-setting__hint">0 = 不限时，由家长手动结束</span>
+        </label>
+        <p id="env-warning" class="env-warning hidden"></p>
+        <button id="btn-start" class="btn-primary">开始吃饭游戏</button>
+      </div>
+    </div>
+
+    <!-- 主游戏屏：左摄像头 · 右小猫 -->
+    <div id="game-screen" class="screen hidden">
+      <div class="split-layout">
+        <section class="panel-camera memphis-panel memphis-panel--left" aria-label="小朋友画面">
+          <div class="frame-wrap">
+            <div class="media-frame">
+              <video id="webcam-mirror" autoplay playsinline muted></video>
+              <canvas id="debug-canvas" class="hidden"></canvas>
+            </div>
+          </div>
+        </section>
+        <div class="split-divider" aria-hidden="true"></div>
+        <section class="panel-cat memphis-panel memphis-panel--right" aria-label="小猫动画">
+          <div class="frame-wrap">
+            <div class="media-frame cat-player">
+              <div id="cat-loading" class="cat-loading hidden" aria-live="polite" aria-label="小猫正在洗手，准备吃饭">
+                <img
+                  class="cat-loading__image"
+                  src="assets/loading image/loading image.png"
+                  alt=""
+                >
+              </div>
+              <video
+                id="cat-video-a"
+                class="cat-video cat-layer"
+                playsinline
+                muted
+                preload="auto"
+              ></video>
+              <video
+                id="cat-video-b"
+                class="cat-video cat-layer"
+                playsinline
+                muted
+                preload="auto"
+              ></video>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 检测用摄像头（隐藏） -->
+      <video id="webcam" autoplay playsinline muted></video>
+
+      <!-- 倒计时结束遮罩（不在主界面显示剩余时间） -->
+      <div id="meal-finish-overlay" class="meal-finish-overlay hidden" role="dialog" aria-labelledby="meal-finish-title">
+        <div class="meal-finish-card memphis-card">
+          <p id="meal-finish-title" class="meal-finish-title">小猫吃完了！</p>
+          <button id="btn-meal-done" class="btn-primary" type="button">吃完了</button>
+        </div>
+      </div>
+
+      <!-- 家长「吃完了」— 游戏界面常显，无需打开设置 -->
+      <button id="btn-finish-meal" class="meal-done-fab" type="button" title="结束本次进餐">吃完了</button>
+
+      <!-- 家长控制栏 -->
+      <div id="parent-panel" class="parent-panel">
+        <button id="btn-toggle-panel" class="panel-toggle" title="家长设置">⚙</button>
+        <div id="panel-content" class="panel-content hidden">
+          <h3>家长设置</h3>
+          <label class="setting-row">
+            <span>进餐倒计时</span>
+            <span id="meal-duration-label" class="setting-value">30 分钟</span>
+          </label>
+          <label class="setting-row setting-row--slider">
+            <input type="range" id="meal-duration" min="0" max="60" value="30">
+          </label>
+          <p class="setting-hint">下次开始游戏时生效；0 为不限时</p>
+          <label class="setting-row">
+            <span>检测灵敏度</span>
+            <input type="range" id="sensitivity" min="1" max="5" value="4">
+          </label>
+          <label class="setting-row checkbox-row">
+            <input type="checkbox" id="show-debug">
+            <span>显示检测调试</span>
+          </label>
+          <label class="setting-row checkbox-row">
+            <input type="checkbox" id="bgm-enabled" checked>
+            <span>背景音乐</span>
+          </label>
+          <label class="setting-row">
+            <span>音乐音量</span>
+            <input type="range" id="bgm-volume" min="0" max="100" value="35">
+          </label>
+          <p id="status-text" class="status-text">准备中…</p>
+          <button id="btn-retry-camera" class="btn-secondary">重试摄像头</button>
+          <button id="btn-retry-ai" class="btn-secondary">重试 AI 模型</button>
+          <button id="btn-restart" class="btn-secondary">重新开始</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 进餐小结 -->
+    <div id="summary-screen" class="screen summary-screen hidden">
+      <div class="summary-bg" aria-hidden="true"></div>
+      <div class="summary-deco summary-deco--circle" aria-hidden="true"></div>
+      <div class="summary-deco summary-deco--square" aria-hidden="true"></div>
+      <div class="memphis-card summary-card">
+        <h2 class="summary-heading">本次吃饭小结</h2>
+        <div class="summary-stat summary-stat--time">
+          <span class="summary-stat__icon" aria-hidden="true">⏱</span>
+          <div class="summary-stat__body">
+            <span class="summary-stat__label">进餐时间</span>
+            <span id="summary-duration" class="summary-stat__value">—</span>
+          </div>
+        </div>
+        <div class="summary-stat summary-stat--child">
+          <span class="summary-stat__icon" aria-hidden="true">👧</span>
+          <div class="summary-stat__body">
+            <span class="summary-stat__label">小朋友吃了</span>
+            <span id="summary-child-bites" class="summary-stat__value">—</span>
+          </div>
+        </div>
+        <div class="summary-stat summary-stat--cat">
+          <span class="summary-stat__icon" aria-hidden="true">🐱</span>
+          <div class="summary-stat__body">
+            <span class="summary-stat__label">小猫吃了</span>
+            <span id="summary-cat-bites" class="summary-stat__value">—</span>
+          </div>
+        </div>
+        <button id="btn-summary-home" class="btn-primary" type="button">返回首页</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/camera.js"></script>
+  <script src="js/bgm.js"></script>
+  <script src="js/detector.js"></script>
+  <script src="js/cat-player.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

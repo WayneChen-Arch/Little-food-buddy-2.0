@@ -44,11 +44,13 @@
     <!-- 主游戏屏：左摄像头 · 右小猫 -->
     <div id="game-screen" class="screen hidden">
       <div class="split-layout">
-        <section class="panel-camera memphis-panel memphis-panel--left" aria-label="小朋友画面">
+        <section class="panel-camera memphis-panel memphis-panel--left" aria-label="小朋友的卡通分身，不显示真实画面">
           <div class="frame-wrap">
-            <div class="media-frame">
-              <video id="webcam-mirror" autoplay playsinline muted></video>
+            <div class="media-frame memoji-frame">
+              <canvas id="memoji-canvas" aria-label="卡通分身"></canvas>
+              <video id="webcam-mirror" class="hidden" autoplay playsinline muted aria-hidden="true"></video>
               <canvas id="debug-canvas" class="hidden"></canvas>
+              <p class="privacy-badge">卡通分身 · 保护隐私</p>
             </div>
           </div>
         </section>
@@ -101,6 +103,7 @@
         <button id="btn-toggle-panel" class="panel-toggle" title="家长设置">⚙</button>
         <div id="panel-content" class="panel-content hidden">
           <h3>家长设置</h3>
+          <p class="setting-hint">小朋友的画面是卡通分身。摄像头只在本机识别吃饭动作，不会把真实的脸显示出来。</p>
           <label class="setting-row">
             <span>进餐倒计时</span>
             <span id="meal-duration-label" class="setting-value">30 分钟</span>
@@ -115,7 +118,7 @@
           </label>
           <label class="setting-row checkbox-row">
             <input type="checkbox" id="show-debug">
-            <span>显示检测调试</span>
+            <span>显示检测调试（仍不显示真实画面）</span>
           </label>
           <label class="setting-row checkbox-row">
             <input type="checkbox" id="bgm-enabled" checked>
@@ -169,6 +172,7 @@
   <script src="js/camera.js"></script>
   <script src="js/bgm.js"></script>
   <script src="js/detector.js"></script>
+  <script src="js/memoji.js"></script>
   <script src="js/cat-player.js"></script>
   <script src="js/app.js"></script>
 </body>

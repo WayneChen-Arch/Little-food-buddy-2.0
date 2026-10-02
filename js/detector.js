@@ -158,6 +158,7 @@ const EatingDetector = (() => {
       },
       runningMode: "VIDEO",
       numFaces: 1,
+      outputFaceBlendshapes: true,
       minFaceDetectionConfidence: 0.3,
       minFacePresenceConfidence: 0.3,
       minTrackingConfidence: 0.3,
@@ -404,6 +405,7 @@ const EatingDetector = (() => {
         face: faceLm,
         hands: handResults.landmarks ?? [],
       },
+      blendshapes: faceResults.faceBlendshapes?.[0] ?? null,
     };
 
     lastResult = result;
@@ -417,13 +419,12 @@ const EatingDetector = (() => {
 
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     if (result.landmarks?.face) {
       const lm = result.landmarks.face;
       const fw = getFaceWidth(lm);
       const mouth = getMouthCenter(lm);
-      const mx = mouth.x * canvas.width;
+      const mx = (1 - mouth.x) * canvas.width;
       const my = mouth.y * canvas.height;
       const zoneR = fw * canvas.width * 0.55;
 
@@ -450,7 +451,7 @@ const EatingDetector = (() => {
         for (const idx of HAND_CHECK) {
           const p = hand[idx];
           ctx.beginPath();
-          ctx.arc(p.x * canvas.width, p.y * canvas.height, 7, 0, Math.PI * 2);
+          ctx.arc((1 - p.x) * canvas.width, p.y * canvas.height, 7, 0, Math.PI * 2);
           ctx.fillStyle =
             result.childBite || result.catBite
               ? "#00ff88"
@@ -469,9 +470,13 @@ const EatingDetector = (() => {
     if (result.debug.mouthOpen) lines.push("张嘴 ✓");
     if (result.debug.minHandDist != null) lines.push("手-嘴距离: " + result.debug.minHandDist);
 
-    ctx.fillStyle = result.childBite || result.catBite ? "#00ff88" : "#ffffff";
+    const boxW = 210;
+    const boxH = lines.length * 18 + 12;
+    ctx.fillStyle = "rgba(45, 45, 45, 0.78)";
+    ctx.fillRect(8, 8, boxW, boxH);
+    ctx.fillStyle = result.childBite || result.catBite ? "#b6ffcf" : "#ffffff";
     ctx.font = "bold 14px sans-serif";
-    lines.forEach((line, i) => ctx.fillText(line, 10, 22 + i * 18));
+    lines.forEach((line, i) => ctx.fillText(line, 16, 26 + i * 18));
 
     ctx.restore();
   }

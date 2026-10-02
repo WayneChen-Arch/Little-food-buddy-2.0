@@ -123,6 +123,8 @@ const App = (() => {
 
   const webcamMirror = document.getElementById("webcam-mirror");
 
+  const memojiCanvas = document.getElementById("memoji-canvas");
+
   const debugCanvas = document.getElementById("debug-canvas");
 
   const statusText = document.getElementById("status-text");
@@ -184,6 +186,8 @@ const App = (() => {
   let catBiteCount = 0;
   let mealEnded = false;
   let sessionMealDurationMin = 30;
+
+  let latestDetection = null;
 
   const WAITING_ROTATE_MS = 12000;
 
@@ -550,6 +554,8 @@ const App = (() => {
 
     const result = EatingDetector.detect(webcam, sensitivity, { countChild, triggerCat });
 
+    latestDetection = result;
+
     if (result.childBite) {
       childBiteCount += 1;
     }
@@ -637,6 +643,14 @@ const App = (() => {
     welcomeScreen.classList.add("hidden");
 
     gameScreen.classList.remove("hidden");
+
+    if (memojiCanvas) {
+      Memoji.start(memojiCanvas, () => ({
+        result: latestDetection,
+        video: webcam,
+        debug: !!(showDebugCheckbox && showDebugCheckbox.checked),
+      }));
+    }
 
   }
 
@@ -801,6 +815,10 @@ const App = (() => {
 
 
   function resetToWelcome() {
+
+    if (typeof Memoji !== "undefined") Memoji.stop();
+
+    latestDetection = null;
 
     stopCamera();
 
